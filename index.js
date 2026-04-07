@@ -73,10 +73,6 @@ async function fetchCurrentPrice() {
     }
   });
 
-  if (!price) {
-    throw new Error('Không tìm được giá vàng 9999 Vân Ngọc Anh trong trang đích.');
-  }
-
   return price;
 }
 
@@ -120,6 +116,11 @@ async function main() {
   const state = loadJson(STATE_PATH, {});
 
   const currentPrice = await fetchCurrentPrice();
+
+  if (!currentPrice) {
+    console.warn('Không tìm được giá hiện tại — bỏ qua lần chạy này.');
+    return;
+  }
   console.log(`Giá hiện tại: ${currentPrice.toLocaleString('vi-VN')}đ`);
 
   const alerts = [];
@@ -167,6 +168,6 @@ async function main() {
 }
 
 main().catch((err) => {
-  console.error(err.message || err);
-  process.exitCode = 1;
+  console.error('Crawler lỗi, bỏ qua lần chạy:', err.message || err);
+  // Không set exit code để workflow không fail khi site lỗi tạm thời
 });
