@@ -1,0 +1,37 @@
+name: Gold Bot
+
+on:
+  schedule:
+    - cron: "*/30 * * * *"
+  workflow_dispatch:
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 18
+      - name: Install deps
+        run: npm install
+      - name: Run crawler
+        env:
+          TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.CHAT_ID }}
+          PRICE_THRESHOLD: ${{ secrets.PRICE_THRESHOLD }}
+          TARGET_URL: ${{ secrets.TARGET_URL }}
+        run: node index.js
+      - name: Commit price history
+        run: |
+          if git status --porcelain -- prices.json state.json | grep .; then
+            git config user.name "github-actions[bot]"
+            git config user.email "github-actions[bot]@users.noreply.github.com"
+            git add prices.json state.json
+            git commit -m "update price"
+            git push
+          else
+            echo "No changes to commit"
+          fi

@@ -1,0 +1,21 @@
+{
+  "name": "gold-bot",
+  "version": "1.0.0",
+  "description": "Telegram notifier for V\u00e0ng 9999 V\u00e2n Ng\u1ecdc Anh, runs on GitHub Actions every 30 minutes.",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "keywords": [
+    "gold",
+    "telegram",
+    "github-actions",
+    "crawler"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "axios": "^1.6.8",
+    "cheerio": "^1.0.0-rc.12"
+  }
+}
