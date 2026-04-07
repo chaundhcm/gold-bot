@@ -3,9 +3,8 @@ const cheerio = require('cheerio');
 const fs = require('fs');
 const path = require('path');
 
-const TARGET_URL =
-  process.env.TARGET_URL ||
-  'https://giavangmaothiet.com/tiem-vang-van-ngoc-anh-cap-nhat-gia-vang-hom-nay/';
+const DEFAULT_URL = 'http://giavangmaothiet.com/tiem-vang-van-ngoc-anh-cap-nhat-gia-vang-hom-nay/';
+const TARGET_URL = process.env.TARGET_URL || DEFAULT_URL;
 const PRICE_THRESHOLD = Number(process.env.PRICE_THRESHOLD) || 16000000;
 const MAX_HISTORY = Number(process.env.MAX_HISTORY) || 10;
 const HISTORY_PATH = path.join(__dirname, 'prices.json');
@@ -23,9 +22,34 @@ function parseNumber(text) {
   return digits ? Number(digits) : NaN;
 }
 
+async function fetchHtml(url) {
+  const { data } = await axios.get(url, {
+    timeout: 15000,
+    headers: {
+      'User-Agent':
+        'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0 Safari/537.36',
+      'Accept-Language': 'vi,en;q=0.8',
+    },
+    maxRedirects: 3,
+  });
+  return data;
+}
+
 async function fetchCurrentPrice() {
-  const { data } = await axios.get(TARGET_URL, { timeout: 15000 });
-  const $ = cheerio.load(data);
+  let html;
+  try {
+    html = await fetchHtml(TARGET_URL);
+  } catch (err) {
+    // Nếu URL https lỗi chứng chỉ/redirect, thử http fallback
+    if (TARGET_URL.startsWith('https://')) {
+      const fallback = TARGET_URL.replace(/^https:/, 'http:');
+      console.warn(`HTTPS lỗi (${err.message}), thử lại với ${fallback}`);
+      html = await fetchHtml(fallback);
+    } else {
+      throw err;
+    }
+  }
+  const $ = cheerio.load(html);
   let price = null;
 
   $('tr').each((_, tr) => {
